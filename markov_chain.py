@@ -25,3 +25,4 @@ class MarkovChain:
         while num_steps > 0:
             current_state = np.random.choice(state_range, p=self._states[current_state])
             num_steps -= dec_val
+        return current_state
