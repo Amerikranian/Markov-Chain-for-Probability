@@ -5,10 +5,22 @@ class MarkovChain:
     def __init__(self, matrix_size):
         self._states = np.zeros((matrix_size, matrix_size))
         self._matrix_size = matrix_size
+        self._state_labels = {}
 
     def __repr__(self):
         print(f"Chain with {self._matrix_size} states")
-        print(self._states)
+        for state_num, state_name in self._state_labels.items():
+            print(f"{state_name}: {self._states[state_num]}")
+
+    def add_entries_to_state(self, state, state_name, values):
+        assert (
+            values.shape[0] == self._matrix_size
+        ), "Not enough probabilities provided for all states in the simulation"
+        self._state_labels[state] = state_name
+        self._states[state] = values
+
+    def get_label_for_state(self, state):
+        return self._state_labels.get(state)
 
     def _check_chain_properties(self):
         return np.sum(self._states) == self._matrix_size
