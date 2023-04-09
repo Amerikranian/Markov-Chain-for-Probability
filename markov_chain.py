@@ -12,7 +12,7 @@ class MarkovChain:
         for state_num, state_name in self._state_labels.items():
             print(f"{state_name}: {self._states[state_num]}")
 
-    def add_entries_to_state(self, state, state_name, values):
+    def add(self, state, state_name, values):
         assert (
             values.shape[0] == self._matrix_size
         ), "Not enough probabilities provided for all states in the simulation"
