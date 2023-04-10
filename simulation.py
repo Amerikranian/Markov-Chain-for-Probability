@@ -11,8 +11,23 @@ def main():
     # Due to how the excel is structured, in order to calculate things like mean we need to sum every other odd or even row and divide by len(col) / 2
     field_goals_attempted_column = dataframe["Field Goals Attempted"]
     three_pointers_attempted_column = dataframe["3 Pointers Attempted"]
+    turnovers_column = dataframe["Turnovers"]
     # Number of entries shall stay mostly the same, so we store it
     num_of_individual_entries = len(field_goals_attempted_column) / 2
+    number_of_turnovers_ut = (
+        sum(
+            turnovers_column[i]
+            for i in range(0, len(turnovers_column), 2)
+        )
+        / num_of_individual_entries
+    )
+    number_of_turnovers_opps = (
+        sum(
+            turnovers_column[i]
+            for i in range(1, len(turnovers_column), 2)
+        )
+        / num_of_individual_entries
+    )
     number_of_field_goal_attempts_ut = (
         sum(
             field_goals_attempted_column[i]
@@ -78,10 +93,50 @@ def main():
     # In this case entry 2 should be derived from 1-p_(keeps possession)-p_(loses possession)
     # This holds true for both teams
     chain.add(
-        0, "UT possession", np.array([-1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        # The total number of drives is equal to turnovers + attempted 3 pointers + attempted 2 pointers
+        0,
+        "UT possession",
+        np.array(
+            [
+                0,
+                number_of_turnovers_ut / (number_of_turnovers_ut + number_of_three_ptr_attempts_ut + number_of_field_goal_attempts_ut),
+                1 - number_of_turnovers_ut / (number_of_turnovers_ut + number_of_three_ptr_attempts_ut + number_of_field_goal_attempts_ut),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        )
     )
+
     chain.add(
-        1, "Enemy possession", np.array([-1, -1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        1,
+        "Enemy possession",
+        np.array(
+            [
+                number_of_turnovers_opps / (number_of_turnovers_ut + number_of_three_ptr_attempts_opps + number_of_field_goal_attempts_opps), 
+                0,
+                0,
+                1 - number_of_turnovers_opps / (number_of_turnovers_ut + number_of_three_ptr_attempts_opps + number_of_field_goal_attempts_opps),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        )
     )
 
     chain.add(
