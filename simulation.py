@@ -3,6 +3,25 @@ import numpy as np
 from markov_chain import MarkovChain
 
 DATA_FILE_NAME = "Probability Project Data.xlsx"
+# We need these to decide who wins
+ut_score = 0
+opp_score = 0
+
+
+def chain_callback(chain, current_state, num_steps):
+    global ut_score
+    global opp_score
+    if current_state == 8:
+        # UT scored a field goal
+        ut_score += 2
+    elif current_state == 9:
+        # UT scored a three-pointer
+        ut_score += 3
+    elif current_state == 9:
+        # Repeat for opposing team
+        opp_score += 2
+    elif current_state == 10:
+        opp_score += 3
 
 
 def main():
@@ -15,17 +34,11 @@ def main():
     # Number of entries shall stay mostly the same, so we store it
     num_of_individual_entries = len(field_goals_attempted_column) / 2
     number_of_turnovers_ut = (
-        sum(
-            turnovers_column[i]
-            for i in range(0, len(turnovers_column), 2)
-        )
+        sum(turnovers_column[i] for i in range(0, len(turnovers_column), 2))
         / num_of_individual_entries
     )
     number_of_turnovers_opps = (
-        sum(
-            turnovers_column[i]
-            for i in range(1, len(turnovers_column), 2)
-        )
+        sum(turnovers_column[i] for i in range(1, len(turnovers_column), 2))
         / num_of_individual_entries
     )
     number_of_field_goal_attempts_ut = (
@@ -99,8 +112,19 @@ def main():
         np.array(
             [
                 0,
-                number_of_turnovers_ut / (number_of_turnovers_ut + number_of_three_ptr_attempts_ut + number_of_field_goal_attempts_ut),
-                1 - number_of_turnovers_ut / (number_of_turnovers_ut + number_of_three_ptr_attempts_ut + number_of_field_goal_attempts_ut),
+                number_of_turnovers_ut
+                / (
+                    number_of_turnovers_ut
+                    + number_of_three_ptr_attempts_ut
+                    + number_of_field_goal_attempts_ut
+                ),
+                1
+                - number_of_turnovers_ut
+                / (
+                    number_of_turnovers_ut
+                    + number_of_three_ptr_attempts_ut
+                    + number_of_field_goal_attempts_ut
+                ),
                 0,
                 0,
                 0,
@@ -111,9 +135,9 @@ def main():
                 0,
                 0,
                 0,
-                0
+                0,
             ]
-        )
+        ),
     )
 
     chain.add(
@@ -121,10 +145,21 @@ def main():
         "Enemy possession",
         np.array(
             [
-                number_of_turnovers_opps / (number_of_turnovers_ut + number_of_three_ptr_attempts_opps + number_of_field_goal_attempts_opps), 
+                number_of_turnovers_opps
+                / (
+                    number_of_turnovers_ut
+                    + number_of_three_ptr_attempts_opps
+                    + number_of_field_goal_attempts_opps
+                ),
                 0,
                 0,
-                1 - number_of_turnovers_opps / (number_of_turnovers_ut + number_of_three_ptr_attempts_opps + number_of_field_goal_attempts_opps),
+                1
+                - number_of_turnovers_opps
+                / (
+                    number_of_turnovers_ut
+                    + number_of_three_ptr_attempts_opps
+                    + number_of_field_goal_attempts_opps
+                ),
                 0,
                 0,
                 0,
@@ -134,9 +169,9 @@ def main():
                 0,
                 0,
                 0,
-                0
+                0,
             ]
-        )
+        ),
     )
 
     chain.add(
@@ -161,6 +196,7 @@ def main():
             ]
         ),
     )
+
     chain.add(
         3,
         "Enemy attempts a shot",
@@ -206,6 +242,7 @@ def main():
             ]
         ),
     )
+
     chain.add(
         5,
         "UT goes for a three pointer",
@@ -251,6 +288,7 @@ def main():
             ]
         ),
     )
+
     chain.add(
         7,
         "Enemy goes for a three pointer",
@@ -279,6 +317,7 @@ def main():
     chain.add(
         8, "UT makes field goal", np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     )
+
     chain.add(
         9,
         "UT makes three pointer",
@@ -291,6 +330,7 @@ def main():
         "Enemy makes field goal",
         np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
     )
+
     chain.add(
         11,
         "Enemy makes three pointer",
@@ -300,6 +340,7 @@ def main():
     chain.add(
         12, "UT fails shot", np.array([-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     )
+
     chain.add(
         13, "Enemy fails shot", np.array([-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     )
