@@ -1,0 +1,29 @@
+UT possession [0.         0.04399351 0.95600649 0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.        ]
+Enemy possession [0.19390848 0.         0.         0.80609152 0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.        ]
+UT attempts a shot [0.         0.         0.         0.         0.17292786 0.82707214
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.        ]
+Enemy attempts a shot [0.         0.         0.         0.         0.         0.
+ 0.78500168 0.21499832 0.         0.         0.         0.
+ 0.         0.        ]
+UT goes for a field goal [0.         0.         0.         0.         0.         0.
+ 0.         0.         0.42504545 0.         0.         0.
+ 0.57495455 0.        ]
+UT goes for a three pointer [0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.33809091 0.         0.
+ 0.66190909 0.        ]
+Enemy goes for a field goal [0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.37954545 0.
+ 0.         0.62045455]
+Enemy goes for a three pointer [0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.30559091
+ 0.         0.69440909]
+UT makes field goal [0 1 0 0 0 0 0 0 0 0 0 0 0 0]
+UT makes three pointer [0 1 0 0 0 0 0 0 0 0 0 0 0 0]
+Enemy makes field goal [1 0 0 0 0 0 0 0 0 0 0 0 0 0]
+Enemy makes three pointer [1 0 0 0 0 0 0 0 0 0 0 0 0 0]
+UT fails shot [-1 -1  0  0  0  0  0  0  0  0  0  0  0  0]

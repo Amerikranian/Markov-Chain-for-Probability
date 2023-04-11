@@ -8,7 +8,7 @@ ut_score = 0
 opp_score = 0
 
 
-def chain_callback(chain, current_state, num_steps):
+def chain_callback(chain, current_state, num_steps, dec_val):
     global ut_score
     global opp_score
     if current_state == 8:
@@ -22,6 +22,36 @@ def chain_callback(chain, current_state, num_steps):
         opp_score += 2
     elif current_state == 10:
         opp_score += 3
+
+    # Ensure we can't get ties
+    if num_steps <= 0 and ut_score == opp_score:
+        return dec_val
+    return -1
+
+
+def run_chain(chain, simulation_length, simulation_step, num_of_games):
+    global ut_score
+    global opp_score
+    ut_wins = 0
+    opp_wins = 0
+
+    for i in range(num_of_games):
+        ut_score = 0
+        opp_score = 0
+        state = chain.run(
+            simulation_length, np.random.randint(0, 1), simulation_step, chain_callback
+        )
+        assert state != -1, "Chain encountered an internal error"
+
+        if ut_score > opp_score:
+            ut_wins += 1
+        elif opp_score > ut_score:
+            opp_wins += 1
+        # There is no else because callback breaks ties
+
+    print(
+        f"After simulating {num_of_games} games, UT ended up with {ut_wins} wins and {opp_wins} losses"
+    )
 
 
 def main():
@@ -100,31 +130,29 @@ def main():
         sum(three_ptr_column[i] for i in range(1, len(three_ptr_column), 2))
         / num_of_individual_entries
     )
+    # The total number of drives is equal to turnovers + attempted 3 pointers + attempted 2 pointers
+    total_drives_ut = (
+        number_of_turnovers_ut
+        + number_of_three_ptr_attempts_ut
+        + number_of_field_goal_attempts_ut
+    )
+    total_drives_opps = (
+        number_of_turnovers_opps
+        + number_of_three_ptr_attempts_opps
+        + number_of_field_goal_attempts_opps
+    )
 
     chain = MarkovChain(14)
     # Each entry in the np.array corresponds to the likelihood of transitioning to that state.
-    # In this case entry 2 should be derived from 1-p_(keeps possession)-p_(loses possession)
     # This holds true for both teams
     chain.add(
-        # The total number of drives is equal to turnovers + attempted 3 pointers + attempted 2 pointers
         0,
         "UT possession",
         np.array(
             [
                 0,
-                number_of_turnovers_ut
-                / (
-                    number_of_turnovers_ut
-                    + number_of_three_ptr_attempts_ut
-                    + number_of_field_goal_attempts_ut
-                ),
-                1
-                - number_of_turnovers_ut
-                / (
-                    number_of_turnovers_ut
-                    + number_of_three_ptr_attempts_ut
-                    + number_of_field_goal_attempts_ut
-                ),
+                number_of_turnovers_ut / total_drives_ut,
+                1 - number_of_turnovers_ut / total_drives_ut,
                 0,
                 0,
                 0,
@@ -145,21 +173,10 @@ def main():
         "Enemy possession",
         np.array(
             [
-                number_of_turnovers_opps
-                / (
-                    number_of_turnovers_ut
-                    + number_of_three_ptr_attempts_opps
-                    + number_of_field_goal_attempts_opps
-                ),
+                number_of_turnovers_opps / total_drives_opps,
                 0,
                 0,
-                1
-                - number_of_turnovers_opps
-                / (
-                    number_of_turnovers_ut
-                    + number_of_three_ptr_attempts_opps
-                    + number_of_field_goal_attempts_opps
-                ),
+                1 - number_of_turnovers_opps / total_drives_opps,
                 0,
                 0,
                 0,
@@ -348,7 +365,29 @@ def main():
     # If you add more states, you will need to expand the matrix by appending zeros
     # If you switch state order, you will need to switch the nonzero probabilities
 
-    # Todo: Add code to run / print stuff about Markov chain when the probabilities are fixed
+    games_won_column = dataframe["Games Won"]
+    games_lost_column = dataframe["Games Lost"]
+    total_games = int(
+        np.ceil(
+            (
+                sum(games_won_column[i] for i in range(0, len(games_won_column), 2))
+                + sum(games_lost_column[i] for i in range(0, len(games_lost_column), 2))
+            )
+            / num_of_individual_entries
+        )
+    )
+
+    # Careful, we're missing some data for minutes
+    # Chop the last 10 not-a-number entries
+    minute_column = dataframe["Minutes"][:-10]
+    total_minutes = sum(minute_column[i] for i in range(0, len(minute_column), 2)) / (
+        len(minute_column) / 2
+    )
+    # total_minutes is the number of minutes spent playing by all five players, so we divide it by 5
+    simulation_length = total_minutes / total_games / 5
+    simulation_step = total_minutes / (total_drives_ut + total_drives_opps)
+
+    run_chain(chain, simulation_length, simulation_step, total_games)
 
 
 if __name__ == "__main__":
