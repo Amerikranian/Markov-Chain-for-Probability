@@ -60,6 +60,9 @@ def main():
     # Due to how the excel is structured, in order to calculate things like mean we need to sum every other odd or even row and divide by len(col) / 2
     field_goals_attempted_column = dataframe["Field Goals Attempted"]
     three_pointers_attempted_column = dataframe["3 Pointers Attempted"]
+    offensive_rebounds_column = dataframe["Offensive Rebounds"]
+    defensive_rebounds_column = dataframe["Defensive Rebounds"]
+    average_rebounds_column = dataframe["Average Rebounds per Game"]
     turnovers_column = dataframe["Turnovers"]
     # Number of entries shall stay mostly the same, so we store it
     num_of_individual_entries = len(field_goals_attempted_column) / 2
@@ -69,6 +72,30 @@ def main():
     )
     number_of_turnovers_opps = (
         sum(turnovers_column[i] for i in range(1, len(turnovers_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_offensive_rebounds_ut = (
+        sum(offensive_rebounds_column[i] for i in range(0, len(offensive_rebounds_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_offensive_rebounds_opps = (
+        sum(offensive_rebounds_column[i] for i in range(1, len(offensive_rebounds_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_defensive_rebounds_ut = (
+        sum(defensive_rebounds_column[i] for i in range(0, len(defensive_rebounds_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_defensive_rebounds_opps = (
+        sum(defensive_rebounds_column[i] for i in range(1, len(defensive_rebounds_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_average_rebounds_ut = (
+        sum(average_rebounds_column[i] for i in range(0, len(average_rebounds_column), 2))
+        / num_of_individual_entries
+    )
+    number_of_average_rebounds_opps = (
+        sum(average_rebounds_column[i] for i in range(1, len(average_rebounds_column), 2))
         / num_of_individual_entries
     )
     number_of_field_goal_attempts_ut = (
@@ -354,12 +381,56 @@ def main():
         np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
     )
 
-    chain.add(
-        12, "UT fails shot", np.array([-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    )
+    ut_average_offensive_rebounds = number_of_average_rebounds_ut * (number_of_offensive_rebounds_ut / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut))
+    opps_average_defensive_rebounds = number_of_average_rebounds_opps * (number_of_defensive_rebounds_opps / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps))
 
     chain.add(
-        13, "Enemy fails shot", np.array([-1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        12,
+        "UT fails shot",
+        np.array(
+            [
+                ut_average_offensive_rebounds / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
+                opps_average_defensive_rebounds / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        )
+    )
+
+    ut_average_defensive_rebounds = number_of_average_rebounds_ut * (number_of_defensive_rebounds_ut / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut))
+    opps_average_offensive_rebounds = number_of_average_rebounds_opps * (number_of_offensive_rebounds_opps / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps))
+
+    chain.add(
+        13,
+        "Enemy fails shot",
+        np.array(
+            [
+                ut_average_defensive_rebounds / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
+                opps_average_offensive_rebounds / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        )
     )
 
     # If you add more states, you will need to expand the matrix by appending zeros
