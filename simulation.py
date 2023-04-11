@@ -1,8 +1,10 @@
+import sys
 import pandas as pd
 import numpy as np
 from markov_chain import MarkovChain
 
 DATA_FILE_NAME = "Probability Project Data.xlsx"
+
 # We need these to decide who wins
 ut_score = 0
 opp_score = 0
@@ -49,12 +51,10 @@ def run_chain(chain, simulation_length, simulation_step, num_of_games):
             opp_wins += 1
         # There is no else because callback breaks ties
 
-    print(
-        f"After simulating {num_of_games} games, UT ended up with {ut_wins} wins and {opp_wins} losses"
-    )
+    return ut_wins, opp_wins
 
 
-def main():
+def main(num_iterations):
     dataframe = pd.read_excel(DATA_FILE_NAME)
 
     # Due to how the excel is structured, in order to calculate things like mean we need to sum every other odd or even row and divide by len(col) / 2
@@ -75,27 +75,45 @@ def main():
         / num_of_individual_entries
     )
     number_of_offensive_rebounds_ut = (
-        sum(offensive_rebounds_column[i] for i in range(0, len(offensive_rebounds_column), 2))
+        sum(
+            offensive_rebounds_column[i]
+            for i in range(0, len(offensive_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_offensive_rebounds_opps = (
-        sum(offensive_rebounds_column[i] for i in range(1, len(offensive_rebounds_column), 2))
+        sum(
+            offensive_rebounds_column[i]
+            for i in range(1, len(offensive_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_defensive_rebounds_ut = (
-        sum(defensive_rebounds_column[i] for i in range(0, len(defensive_rebounds_column), 2))
+        sum(
+            defensive_rebounds_column[i]
+            for i in range(0, len(defensive_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_defensive_rebounds_opps = (
-        sum(defensive_rebounds_column[i] for i in range(1, len(defensive_rebounds_column), 2))
+        sum(
+            defensive_rebounds_column[i]
+            for i in range(1, len(defensive_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_average_rebounds_ut = (
-        sum(average_rebounds_column[i] for i in range(0, len(average_rebounds_column), 2))
+        sum(
+            average_rebounds_column[i]
+            for i in range(0, len(average_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_average_rebounds_opps = (
-        sum(average_rebounds_column[i] for i in range(1, len(average_rebounds_column), 2))
+        sum(
+            average_rebounds_column[i]
+            for i in range(1, len(average_rebounds_column), 2)
+        )
         / num_of_individual_entries
     )
     number_of_field_goal_attempts_ut = (
@@ -381,16 +399,24 @@ def main():
         np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
     )
 
-    ut_average_offensive_rebounds = number_of_average_rebounds_ut * (number_of_offensive_rebounds_ut / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut))
-    opps_average_defensive_rebounds = number_of_average_rebounds_opps * (number_of_defensive_rebounds_opps / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps))
+    ut_average_offensive_rebounds = number_of_average_rebounds_ut * (
+        number_of_offensive_rebounds_ut
+        / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut)
+    )
+    opps_average_defensive_rebounds = number_of_average_rebounds_opps * (
+        number_of_defensive_rebounds_opps
+        / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps)
+    )
 
     chain.add(
         12,
         "UT fails shot",
         np.array(
             [
-                ut_average_offensive_rebounds / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
-                opps_average_defensive_rebounds / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
+                ut_average_offensive_rebounds
+                / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
+                opps_average_defensive_rebounds
+                / (ut_average_offensive_rebounds + opps_average_defensive_rebounds),
                 0,
                 0,
                 0,
@@ -402,21 +428,29 @@ def main():
                 0,
                 0,
                 0,
-                0
+                0,
             ]
-        )
+        ),
     )
 
-    ut_average_defensive_rebounds = number_of_average_rebounds_ut * (number_of_defensive_rebounds_ut / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut))
-    opps_average_offensive_rebounds = number_of_average_rebounds_opps * (number_of_offensive_rebounds_opps / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps))
+    ut_average_defensive_rebounds = number_of_average_rebounds_ut * (
+        number_of_defensive_rebounds_ut
+        / (number_of_offensive_rebounds_ut + number_of_defensive_rebounds_ut)
+    )
+    opps_average_offensive_rebounds = number_of_average_rebounds_opps * (
+        number_of_offensive_rebounds_opps
+        / (number_of_offensive_rebounds_opps + number_of_defensive_rebounds_opps)
+    )
 
     chain.add(
         13,
         "Enemy fails shot",
         np.array(
             [
-                ut_average_defensive_rebounds / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
-                opps_average_offensive_rebounds / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
+                ut_average_defensive_rebounds
+                / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
+                opps_average_offensive_rebounds
+                / (ut_average_defensive_rebounds + opps_average_offensive_rebounds),
                 0,
                 0,
                 0,
@@ -428,9 +462,9 @@ def main():
                 0,
                 0,
                 0,
-                0
+                0,
             ]
-        )
+        ),
     )
 
     # If you add more states, you will need to expand the matrix by appending zeros
@@ -458,8 +492,30 @@ def main():
     simulation_length = total_minutes / total_games / 5
     simulation_step = total_minutes / (total_drives_ut + total_drives_opps)
 
-    run_chain(chain, simulation_length, simulation_step, total_games)
+    ut_wins = 0
+    ut_losses = 0
+
+    # We run the chain for a sufficiently large number of iterations to get an accurate result
+    for i in range(num_iterations):
+        wins, losses = run_chain(chain, simulation_length, simulation_step, total_games)
+        ut_wins += wins
+        ut_losses += losses
+
+    ut_wins = int(np.ceil(ut_wins / num_iterations))
+    ut_losses = int(np.ceil(ut_losses / num_iterations))
+    print(
+        f"After simulating a season {num_iterations} times, UT ended up with {ut_wins} wins and {ut_losses} losses"
+    )
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 2:
+        print("Usage: " + sys.argv[0] + " <number of chain iterations>")
+        exit(-1)
+
+    try:
+        num_iterations = int(sys.argv[1])
+    except ValueError:
+        print("Passed in value must be an integer")
+        exit(-1)
+    main(num_iterations)
