@@ -1,7 +1,9 @@
 import sys
 import pandas as pd
 import numpy as np
+from collections import Counter
 from markov_chain import MarkovChain
+
 
 DATA_FILE_NAME = "Probability Project Data.xlsx"
 
@@ -492,20 +494,23 @@ def main(num_iterations):
     simulation_length = total_minutes / total_games / 5
     simulation_step = total_minutes / (total_drives_ut + total_drives_opps)
 
-    ut_wins = 0
-    ut_losses = 0
+    ut_wins = []
+    ut_losses = []
 
     # We run the chain for a sufficiently large number of iterations to get an accurate result
     for i in range(num_iterations):
         wins, losses = run_chain(chain, simulation_length, simulation_step, total_games)
-        ut_wins += wins
-        ut_losses += losses
+        ut_wins.append(wins)
+        ut_losses.append(losses)
 
-    ut_wins = int(np.ceil(ut_wins / num_iterations))
-    ut_losses = int(np.ceil(ut_losses / num_iterations))
     print(
-        f"After simulating a season {num_iterations} times, UT ended up with {ut_wins} wins and {ut_losses} losses"
+        f"After simulating a season {num_iterations} times, UT ended up with {np.mean(ut_wins)} wins and {np.mean(ut_losses)} losses\n"
     )
+    print(
+        f"Standard deviation for wins: {np.std(ut_wins)}\nStandard deviation for losses: {np.std(ut_losses)}"
+    )
+    print(f"Mode for wins: {Counter(ut_wins).most_common(2)}")
+    print(f"Mode for losses: {Counter(ut_losses).most_common(2)}")
 
 
 if __name__ == "__main__":
